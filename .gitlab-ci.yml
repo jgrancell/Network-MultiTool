@@ -1,0 +1,42 @@
+image: docker:stable
+
+services:
+  - docker:dind
+
+variables:
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
+
+stages:
+  - build
+  - push
+
+before_script:
+  - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+
+build:
+  stage: build
+  variables:
+    IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+    QUALIFIED_IMAGE_NAME: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG:$CI_COMMIT_SHA
+  script:
+    - mkdir -p artifacts
+    - docker pull $IMAGE_NAME || true
+    - docker build --cache-from $IMAGE_NAME --tag $IMAGE_NAME --tag $QUALIFIED_IMAGE_NAME -f Dockerfile .
+    - docker save $QUALIFIED_IMAGE_NAME > artifacts/slug.tar
+    - docker save $IMAGE_NAME > artifacts/image.tar
+    - test -f artifacts/image.tar && echo "Image build completed successfully." || exit 1
+  artifacts:
+    paths:
+      - artifacts
+
+push:
+  stage: push
+  variables:
+    IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+    QUALIFIED_IMAGE_NAME: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_SLUG:$CI_COMMIT_SHA
+  script:
+    - docker load -i artifacts/image.tar
+    - docker load -i artifacts/slug.tar
+    - docker push $IMAGE_NAME
+    - docker push $QUALIFIED_IMAGE_NAME

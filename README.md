@@ -2,7 +2,7 @@
 This is a multitool for container/network testing and troubleshooting, based on Alpine Linux.
 
 ## Downloadable from Docker Hub:
-* [https://hub.docker.com/r/praqma/network-multitool/](https://hub.docker.com/r/praqma/network-multitool/)  (Automated Build)
+* [https://hub.docker.com/r/jgrancell/network-multitool/](https://hub.docker.com/r/jgrancell/network-multitool/)  (Automated Build)
 
 # Tools included:
 * apk package manager
